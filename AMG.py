@@ -1,6 +1,7 @@
 # - ascii map generator
 
 import random
+import argparse
 
 # - Lists of rectangles
 shapes0 = {
@@ -50,7 +51,14 @@ presets = {
 }
 
 # Function that creates the basic map, defines stuff like size, legend, positions on left/right side, ect
-def Start(s):
+#
+# a: length
+# b: width
+# l: number of islands added to the map (these can overlap)
+# c: number of times the cutter function will run (curves sharp edges)
+# shapes: the average sizes of the islands used (shapes0 - 5)
+# p: place "stuff" (T or F)
+def Start(arg_a, arg_b, arg_l, arg_c, arg_shapes, arg_p):
     global MAP
     global stuff
     global PIL
@@ -68,39 +76,28 @@ def Start(s):
     stuff = ["*", "@", "!", ".", "+", "%", "&", "$", "#"]
     PIL = []
     MAP = {}
-    if s == "1":
-        shapes = shapes1
-        l = 7
-        c = 2
-        a = 18
-        b = 40
-        p = "T"
-    elif s == "2":
-        shapes = shapes2
-        l = 15
-        c = 3
-        a = 36
-        b = 100
-        p = "T"
-    elif s == "3":
-        shapes = shapes2
-        l = 50
-        c = 4
-        a = 48
-        b = 191
-        p = "T"
-    else:
-        for i in presets:
-            print(i)
-        cmd = int(input(">"))
-        for i in presets:
-            if presets[i]["Set"] == cmd:
-                shapes = presets[i]["shapes"]
-                l = presets[i]["l"]
-                c = presets[i]["c"]
-                a = presets[i]["a"]
-                b = presets[i]["b"]
-                p = presets[i]["p"]
+
+    # Assign the arguments to the globals
+    a = arg_a
+    b = arg_b
+    l = arg_l
+    c = arg_c
+    p = arg_p
+    
+    match arg_shapes:
+        case 1:
+            shapes = shapes0
+        case 2:
+            shapes = shapes1
+        case 3:
+            shapes = shapes2
+        case 4:
+            shapes = shapes3
+        case 5:
+            shapes = shapes4
+        case _:
+            shapes = shapes0
+    
     A = a*b
     MAP = {}
     for x in range(A):
@@ -151,7 +148,7 @@ def PrintM():
         try:
             print(Legend[i])
         except:
-            print(" |                      |")
+            print("") # print(" |                      |")
         x = 1
         i += 1
 
@@ -329,9 +326,9 @@ def Outline():
             elif (Sides["U"] == 1 and Sides["L"] == 1) or (Sides["D"] == 1 and Sides["R"] == 1):
                 MAP[i] = "/"
             elif (Sides["U"] == 1 and Sides["R"] == 1) or (Sides["D"] == 1 and Sides["L"] == 1):
-                MAP[i] = u"\u005C"
+                MAP[i] = "\\"
             elif Sides["U"] == 1:
-                MAP[i] = u"\u203E"
+                MAP[i] = "`" # "‾"
             elif Sides["D"] == 1:
                 MAP[i] = "_"
             elif Sides["L"] == 1 or Sides["R"] == 1:
@@ -398,20 +395,34 @@ def LegendC():
     MAP[b*2 + 3] = "E"
     MAP[b*3 + 2] = "S"
         
+parser = argparse.ArgumentParser(
+                    prog='AMG.py',
+                    description='Generate simple ASCII maps',
+                    epilog='Oh hai!')
 
-# Main loop
-while True:
-    print("Small(1), Medium(2), or Large(3)")
-    print("More(4)")
-    cmd = input(">")
-    Start(cmd)
-    for i in range(l):
-        AddB()
-    print("")
-    Curve()
-    Outline()
-    Clear()
-    AddStuff()
-    LegendC()
-    PrintM()
-    print("")
+# a: length
+# b: width
+# l: number of islands added to the map (these can overlap)
+# c: number of times the cutter function will run (curves sharp edges)
+# shapes: the average sizes of the islands used (shapes0 - 5)
+# p: place "stuff" (T or F)
+
+parser.add_argument('-a', '--length', default=50, type=int)
+parser.add_argument('-b', '--width', default=100, type=int)
+parser.add_argument('-l', '--island_count', default=50, type=int)
+parser.add_argument('-c', '--cutter_count', default=4, type=int)
+parser.add_argument('--shapes', default=3, type=int)
+parser.add_argument('--place', default="F")
+
+args = parser.parse_args()
+
+Start(args.length, args.width, args.island_count, args.cutter_count, args.shapes, args.place)
+for i in range(l):
+    AddB()
+Curve()
+Outline()
+Clear()
+# AddStuff()
+# LegendC()
+PrintM()
+print("")
